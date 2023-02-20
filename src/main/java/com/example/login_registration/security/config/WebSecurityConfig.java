@@ -1,11 +1,9 @@
-package com.example.demo.security.config;
+package com.example.login_registration.security.config;
 
-import com.example.demo.appuser.AppUser;
-import com.example.demo.appuser.AppUserService;
+import com.example.login_registration.appuser.AppUserService;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
