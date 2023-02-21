@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,16 +29,24 @@ public class AppUserService implements UserDetailsService {
     }
 
     public String signUpUser(AppUser appUser) {
-        boolean userExists = appUserRepository.findByEmail(appUser.getEmail()).isPresent();
-        if (userExists) {
-            // TODO: check if attributes are the same and if email not confirmed send confirmation email
-            throw new IllegalStateException("email already taken");
-        }
+        String token = UUID.randomUUID().toString();
+        appUserRepository.findByEmail(appUser.getEmail())
+                .ifPresentOrElse(user -> saveConfirmationToken(user, token),
+                        () -> saveConfirmationTokenForNewUser(appUser, token)
+                );
+
+        return token;
+    }
+
+    private void saveConfirmationTokenForNewUser(AppUser appUser, String token) {
         String encodedPassword = bCryptPasswordEncoder.encode(appUser.getPassword());
         appUser.setPassword(encodedPassword);
         appUserRepository.save(appUser);
+        saveConfirmationToken(appUser, token);
+    }
 
-        String token = UUID.randomUUID().toString();
+    private void saveConfirmationToken(AppUser appUser, String token) {
+        if (appUser.isEnabled()) throw new IllegalStateException("email already taken");
         ConfirmationToken confirmationToken = new ConfirmationToken(
                 token,
                 LocalDateTime.now(),
@@ -45,8 +54,6 @@ public class AppUserService implements UserDetailsService {
                 appUser
         );
         confirmationTokenService.saveConfirmationToken(confirmationToken);
-        // TODO: SEND EMAIL
-        return token;
     }
 
     public int enableAppUser(String email) {
